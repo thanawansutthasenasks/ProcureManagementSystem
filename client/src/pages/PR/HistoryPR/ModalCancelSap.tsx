@@ -1,4 +1,14 @@
 import React from "react";
+import { Button } from "antd";
+import { ExclamationCircleFilled } from "@ant-design/icons";
+import { BaseModal } from "../../../components/Modals";
+
+// 🌟 Config: ตั้งค่าคำของปุ่มได้ที่นี่
+const BUTTON_CONFIG = {
+    cancel: "Cancel",
+    confirm: "Confirm",
+    loading: "Processing..."
+};
 
 interface ModalCancelSapProps {
     show: boolean;
@@ -8,7 +18,6 @@ interface ModalCancelSapProps {
     onConfirm: (prNumber: string) => void;
 }
 
-
 const ModalCancelSap: React.FC<ModalCancelSapProps> = ({
     show,
     prNumber,
@@ -16,65 +25,49 @@ const ModalCancelSap: React.FC<ModalCancelSapProps> = ({
     onClose,
     onConfirm,
 }) => {
-    if (!show || !prNumber) return null;
+    // ❌ ลบบรรทัด if (!show || !prNumber) return null; ออกไปแล้ว
 
     return (
-        <>
+        <BaseModal show={show} size="sm" onClose={onClose} closeOnBackdrop={!submitting}>
+            <div className="flex flex-col items-center text-center px-4 py-6 gap-3">
 
-            <div className="modal-backdrop fade show"></div>
-
-
-            <div className="modal fade show d-block" tabIndex={-1}>
-                <div className="modal-dialog modal-dialog-centered modal-md">
-                    <div className="modal-content shadow border-0">
-
-
-                        <div className="modal-header bg-danger text-white">
-                            <h5 className="modal-title">Confirm Cancel PR</h5>
-                            <button
-                                type="button"
-                                className="btn-close btn-close-white"
-                                onClick={onClose}
-                            />
-                        </div>
-
-                        <div className="modal-body text-center">
-                            <p className="fw-semibold mb-3">
-                                คุณต้องการยกเลิก PR หมายเลข
-                            </p>
-
-                            <h4 className="text-danger mb-3">{prNumber}</h4>
-
-
-                        </div>
-
-
-                        <div className="modal-footer justify-content-end">
-                            <button
-                                className="btn btn-danger px-4"
-                                disabled={submitting}
-                                onClick={() => {
-                                    if (prNumber) {
-                                        onConfirm(prNumber);
-                                    }
-                                }}
-                            >
-                                {submitting ? (
-                                    <>
-                                        <span className="spinner-border spinner-border-sm me-2" />
-                                        กำลังยกเลิก...
-                                    </>
-                                ) : (
-                                    "Confirm"
-                                )}
-                            </button>
-
-                        </div>
-
-                    </div>
+                {/* Icon */}
+                <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center"
+                    style={{ background: "#ef44441a" }}
+                >
+                    <ExclamationCircleFilled style={{ fontSize: 28, color: "#ef4444" }} />
                 </div>
+
+                {/* Text */}
+                <div className="space-y-2">
+                    <h5 className="text-base font-bold m-0" style={{ color: "var(--color-text)" }}>
+                        Confirm Cancel PR
+                    </h5>
+                    <p className="text-sm m-0 mt-1" style={{ color: "var(--color-text-sub)" }}>
+                        คุณต้องการยกเลิก PR หมายเลข
+                    </p>
+                    <p className="text-lg font-bold m-0 mt-1" style={{ color: "#ef4444" }}>
+                        {prNumber}
+                    </p>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-2 w-full mt-2">
+                    <Button block onClick={onClose} disabled={submitting}>
+                        {BUTTON_CONFIG.cancel}
+                    </Button>
+                    <Button
+                        block danger type="primary"
+                        loading={submitting}
+                        onClick={() => prNumber && onConfirm(prNumber)}
+                    >
+                        {submitting ? BUTTON_CONFIG.loading : BUTTON_CONFIG.confirm}
+                    </Button>
+                </div>
+
             </div>
-        </>
+        </BaseModal>
     );
 };
 

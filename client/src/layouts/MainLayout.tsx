@@ -1,288 +1,407 @@
+/**
+ * client/src/layouts/MainLayout.tsx
+ * Design: Light sidebar (Notion/Linear) + light content
+ * Stack: Tailwind CSS v4 + Ant Design · Light mode only
+ */
+
 import { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useMsal } from "@azure/msal-react";
-import "../App.css";
+import { Tooltip, Avatar, ConfigProvider, Badge } from "antd";
+import {
+  HomeOutlined,
+  FileTextOutlined,
+  PlusCircleOutlined,
+  HistoryOutlined,
+  FileProtectOutlined,
+  ExportOutlined,
+  LogoutOutlined,
+  MenuOutlined,
+  BellOutlined,
+  RightOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 
+// ─── Nav Config ────────────────────────────────────────────────
+interface NavChild {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  to: string;
+}
+interface NavItem {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  to?: string;
+  children?: NavChild[];
+}
+
+const NAV: NavItem[] = [
+  { key: "home", label: "Home", icon: <HomeOutlined />, to: "/" },
+  {
+    key: "pr",
+    label: "Purchase Request",
+    icon: <FileTextOutlined />,
+    children: [
+      { key: "createPR", label: "Create PR", icon: <PlusCircleOutlined />, to: "/createPR" },
+      { key: "historyPR", label: "History PR", icon: <HistoryOutlined />, to: "/HistoryPR" },
+    ],
+  },
+  {
+    key: "po",
+    label: "Purchase Order",
+    icon: <FileProtectOutlined />,
+    children: [
+      { key: "exportPO", label: "Export PO", icon: <ExportOutlined />, to: "/exportPO" },
+    ],
+  },
+];
+
+// ─── Helpers ───────────────────────────────────────────────────
+function getInitials(email: string): string {
+  if (!email) return "U";
+  const name = email.split("@")[0];
+  const parts = name.split(/[._-]/);
+  return parts.length > 1
+    ? (parts[0][0] + parts[1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+}
+
+// ─── Main Layout ───────────────────────────────────────────────
 const MainLayout: React.FC = () => {
-  const [openPR, setOpenPR] = useState(false);
-  const [openPO, setOpenPO] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [showOffcanvas, setShowOffcanvas] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const userContext = JSON.parse(localStorage.getItem("userContext") || "{}");
   const email = userContext.email || "";
-
-  const { accounts, instance } = useMsal();
-
-  // For copy token api testing
-  const copyToken = async () => {
-    const token = accounts[0]?.idToken;
-    await navigator.clipboard.writeText(token);
-    alert("Token copied!");
-  };
+  const initials = getInitials(email);
 
   return (
-    <div className="d-flex min-vh-100 w-100">
-      {/* <button onClick={copyToken}>Copy Token</button> */}
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: "#6366f1",
+          colorBgBase: "#ffffff",
+          colorTextBase: "#111128",
+          borderRadius: 8,
+          fontFamily: '"Sarabun", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        },
+      }}
+    >
+      <div className="page-root">
 
-      {/* ================= Sidebar Desktop ================= */}
-      <aside
-        className="d-none d-md-flex flex-column sidebar-bg text-white shadow-lg"
-        style={{
-          width: collapsed ? 70 : 220,
-          height: "100vh",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          transition: "width 0.3s",
-          overflowY: "auto",
-        }}
-      >
-        <SidebarContent
-          openPR={openPR}
-          setOpenPR={setOpenPR}
-          openPO={openPO}
-          setOpenPO={setOpenPO}
-          collapsed={collapsed}
-        />
-      </aside>
-
-      {/* ================= Offcanvas Mobile ================= */}
-      {showOffcanvas && (
-        <>
-          <div
-            className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
-            style={{ zIndex: 1290 }}
-            onClick={() => setShowOffcanvas(false)}
+        {/* ── Desktop Sidebar ─────────────────────────────────── */}
+        <aside className={`sidebar hidden md:flex ${collapsed ? "sidebar-collapsed" : "sidebar-wide"}`}>
+          <SidebarContent
+            collapsed={collapsed}
+            email={email}
+            initials={initials}
           />
-          <div
-            className="position-fixed top-0 start-0 h-100 bg-danger text-white shadow-lg"
-            style={{ width: 220, zIndex: 1300 }}
-          >
-            <div className="d-flex justify-content-between align-items-center p-3 border-bottom">
-              <h5 className="mb-0">PMS</h5>
-              <button
-                className="btn-close btn-close-white"
-                onClick={() => setShowOffcanvas(false)}
-              />
-            </div>
-            <SidebarContent
-              openPR={openPR}
-              setOpenPR={setOpenPR}
-              openPO={openPO}
-              setOpenPO={setOpenPO}
-              onLinkClick={() => setShowOffcanvas(false)}
+        </aside>
+
+        {/* ── Mobile Sidebar ──────────────────────────────────── */}
+        {mobileOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
+              onClick={() => setMobileOpen(false)}
             />
-          </div>
-        </>
-      )}
+            <aside className="sidebar sidebar-wide flex md:hidden z-50">
+              <SidebarContent
+                collapsed={false}
+                email={email}
+                initials={initials}
+                onLinkClick={() => setMobileOpen(false)}
+              />
+            </aside>
+          </>
+        )}
 
-      {/* ================= Main ================= */}
-      <div
-        className="flex-grow-1 d-flex flex-column"
-        style={{
-          marginLeft: collapsed ? 70 : 220,
-          transition: "margin-left 0.3s",
-        }}
-      >
-        {/* Navbar */}
-        <nav className="navbar bg-light shadow-sm">
-          <div className="container-fluid d-flex align-items-center justify-content-between">
-            <div className="d-flex align-items-center gap-2">
-              <button
-                className="btn btn-outline-danger d-md-none"
-                onClick={() => setShowOffcanvas(true)}
+        {/* ── Content ─────────────────────────────────────────── */}
+        <div
+          className="flex flex-1 flex-col h-screen overflow-hidden"
+          style={{
+            marginLeft: collapsed
+              ? "var(--width-sidebar-collapsed)"
+              : "var(--width-sidebar)",
+            transition: "margin-left 0.25s cubic-bezier(0.4,0,0.2,1)",
+          }}
+        >
+          {/* Topbar */}
+          <header className="topbar">
+            <button className="icon-btn md:hidden" onClick={() => setMobileOpen(true)}>
+              <MenuOutlined style={{ fontSize: 16 }} />
+            </button>
+            <button className="icon-btn hidden md:flex" onClick={() => setCollapsed((c) => !c)}>
+              <MenuOutlined style={{ fontSize: 16 }} />
+            </button>
+
+            <Link to="/" className="flex items-center ml-1">
+              <img src="/T2_removeBG.png" alt="PMS" className="h-7 w-auto object-contain" />
+            </Link>
+
+            {/* Search — desktop */}
+            <div className="hidden md:flex flex-1 max-w-xs ml-4">
+              <div
+                className="flex items-center gap-2 w-full px-3 py-1.5 rounded-lg text-sm cursor-pointer"
+                style={{
+                  background: "var(--color-surface)",
+                  border: "1px solid var(--color-border)",
+                  color: "var(--color-text-muted)",
+                }}
               >
-                <i className="fas fa-bars"></i>
-              </button>
-              <button
-                className="btn btn-outline-danger d-none d-md-inline"
-                onClick={() => setCollapsed(!collapsed)}
-              >
-                <i className="fas fa-bars"></i>
-              </button>
-              <Link to="/">
-                <img src="/T2_removeBG.png" alt="PMS Logo" style={{ width: "80px" }} />
-              </Link>
+                <SearchOutlined style={{ fontSize: 13 }} />
+                <span>Search...</span>
+              </div>
             </div>
-            <div style={{ fontSize: "0.75rem", opacity: 0.8 }}>{email}</div>
-          </div>
-        </nav>
 
-        {/* Content */}
-        <main className="flex-grow-1 p-3 overflow-auto">
-          <Outlet />
-        </main>
+            <div className="flex-1" />
+
+            <Tooltip title="Notifications">
+              <button className="icon-btn">
+                <Badge count={3} size="small" color="#6366f1">
+                  <BellOutlined style={{ fontSize: 16 }} />
+                </Badge>
+              </button>
+            </Tooltip>
+
+            <Tooltip title={email} placement="bottomRight">
+              <Avatar
+                size={32}
+                style={{
+                  background: "linear-gradient(135deg, #4f46e5, #818cf8)",
+                  fontWeight: 700,
+                  fontSize: 11,
+                  cursor: "pointer",
+                  flexShrink: 0,
+                }}
+              >
+                {initials}
+              </Avatar>
+            </Tooltip>
+          </header>
+
+          {/* Page content */}
+          <main
+            className="flex flex-1 p-4 md:p-5 overflow-hidden"
+            style={{ background: "var(--color-bg-base, #f8fafc)" }}
+          >
+            <div className="flex-1 w-full h-full">
+              <Outlet />
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </ConfigProvider>
   );
 };
 
-/* ================= Sidebar ================= */
-
+// ─── Sidebar Content ───────────────────────────────────────────
 interface SidebarContentProps {
-  openPR: boolean;
-  setOpenPR: (open: boolean) => void;
-  openPO: boolean;
-  setOpenPO: (open: boolean) => void;
-  collapsed?: boolean;
+  collapsed: boolean;
+  email: string;
+  initials: string;
   onLinkClick?: () => void;
 }
 
 const SidebarContent: React.FC<SidebarContentProps> = ({
-  openPR,
-  setOpenPR,
-  openPO,
-  setOpenPO,
   collapsed,
+  email,
+  initials,
   onLinkClick,
 }) => {
   const { instance } = useMsal();
+  const [openGroups, setOpenGroups] = useState<string[]>(["pr"]);
 
   const handleLogout = () => {
     instance.logoutRedirect({ postLogoutRedirectUri: "/login" });
   };
 
+  const toggleGroup = (key: string) => {
+    setOpenGroups((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
   return (
-    <div className="d-flex flex-column h-100 p-3">
-      {!collapsed && (
-        <div className="mb-3 text-white">
-          <div className="text-center">
-            <img
-              src="/sukishi_main_transparent.png"
-              alt="Logo"
-              style={{ width: "150px" }}
-            />
-          </div>
-        </div>
-      )}
+    <div className="flex flex-col h-full w-full">
 
-      <ul className="nav nav-pills flex-column mb-auto">
-
-        {/* ── Home ── */}
-        <li className="nav-item">
-          <NavLink
-            to="/"
-            end                       // match "/" เฉพาะตรงๆ ไม่ครอบ route ลูก
-            onClick={onLinkClick}
-            className={({ isActive }) =>
-              "nav-link " + (isActive ? "active-gold" : "text-white")
-            }
-          >
-            <i className="fas fa-home"></i>
-            {!collapsed && <span className="ms-2">Home</span>}
-          </NavLink>
-        </li>
-
-        {/* ── PR ── */}
-        <li className="nav-item">
+      {/* Brand header */}
+      <div
+        className="flex h-14 shrink-0 items-center px-4"
+        style={{ borderBottom: "1px solid var(--color-sidebar-border)" }}
+      >
+        {collapsed ? (
+          /* Collapsed — icon only */
           <div
-            className="nav-link text-white d-flex justify-content-between align-items-center"
-            role="button"
-            onClick={() => !collapsed && setOpenPR(!openPR)}
+            className="mx-auto w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
+            style={{ background: "linear-gradient(135deg, #4f46e5, #818cf8)" }}
           >
-            <span>
-              <i className="fas fa-file-alt"></i>
-              {!collapsed && <span className="ms-2">PR</span>}
-            </span>
-            {!collapsed && (
-              <i
-                className="fas fa-chevron-right"
-                style={{
-                  transform: openPR ? "rotate(90deg)" : "rotate(0deg)",
-                  transition: "0.3s",
-                }}
-              />
-            )}
+            <span className="text-white font-bold text-xs">P</span>
           </div>
+        ) : (
+          /* Expanded */
+          <div className="flex items-center gap-3">
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+              style={{ background: "linear-gradient(135deg, #4f46e5, #818cf8)" }}
+            >
+              <span className="text-white font-bold text-xs">P</span>
+            </div>
+            <div>
+              <p
+                className="text-sm font-semibold leading-tight"
+                style={{ color: "var(--color-text)" }}
+              >
+                PMS
+              </p>
+              <p
+                className="text-[11px] leading-tight"
+                style={{ color: "var(--color-sidebar-dim)" }}
+              >
+                Procure Management
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
-          {openPR && !collapsed && (
-            <ul className="nav flex-column ms-3">
-              <li className="nav-item">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3 space-y-0.5">
+        {NAV.map((item) => {
+
+          if (!item.children) {
+            return (
+              <Tooltip key={item.key} title={collapsed ? item.label : ""} placement="right">
                 <NavLink
-                  to="/createPR"
+                  to={item.to!}
+                  end
                   onClick={onLinkClick}
                   className={({ isActive }) =>
-                    "nav-link " + (isActive ? "active-gold" : "text-white")
+                    `nav-item ${collapsed ? "nav-item-centered" : ""} ${isActive ? "nav-item-active" : ""}`
                   }
                 >
-                  <i className="fas fa-plus-circle me-2"></i>
-                  Create PR
+                  <span className="text-[15px] shrink-0 leading-none">{item.icon}</span>
+                  {!collapsed && <span>{item.label}</span>}
                 </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink
-                  to="/HistoryPR"
-                  onClick={onLinkClick}
-                  className={({ isActive }) =>
-                    "nav-link " + (isActive ? "active-gold" : "text-white")
-                  }
-                >
-                  <i className="fa-solid fa-clock-rotate-left me-2"></i>
-                  History PR
-                </NavLink>
-              </li>
-            </ul>
-          )}
-        </li>
+              </Tooltip>
+            );
+          }
 
-        {/* ── PO ── */}
-        <li className="nav-item">
+          const isOpen = openGroups.includes(item.key);
+
+          return (
+            <div key={item.key}>
+              <Tooltip title={collapsed ? item.label : ""} placement="right">
+                <button
+                  onClick={() => !collapsed && toggleGroup(item.key)}
+                  className={`nav-item ${collapsed ? "nav-item-centered" : ""}`}
+                  style={!collapsed ? { justifyContent: "space-between" } : {}}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="text-[15px] shrink-0 leading-none">{item.icon}</span>
+                    {!collapsed && <span>{item.label}</span>}
+                  </span>
+                  {!collapsed && (
+                    <RightOutlined
+                      style={{
+                        fontSize: 10,
+                        color: "var(--color-sidebar-dim)",
+                        transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s ease",
+                      }}
+                    />
+                  )}
+                </button>
+              </Tooltip>
+
+              {isOpen && !collapsed && (
+                <div
+                  className="ml-4 pl-3 mt-0.5 space-y-0.5"
+                  style={{ borderLeft: "2px solid var(--color-sidebar-border)" }}
+                >
+                  {item.children!.map((child) => (
+                    <NavLink
+                      key={child.key}
+                      to={child.to}
+                      onClick={onLinkClick}
+                      className={({ isActive }) =>
+                        `nav-item py-1.5 text-[13px] ${isActive ? "nav-item-active" : ""}`
+                      }
+                    >
+                      <span className="text-xs shrink-0 leading-none">{child.icon}</span>
+                      <span>{child.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div
+        className="px-2.5 pb-3 pt-2 shrink-0 space-y-1"
+        style={{ borderTop: "1px solid var(--color-sidebar-border)" }}
+      >
+        {/* User info */}
+        {!collapsed && (
           <div
-            className="nav-link text-white d-flex justify-content-between align-items-center"
-            role="button"
-            onClick={() => !collapsed && setOpenPO(!openPO)}
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl mb-1"
+            style={{ background: "var(--color-sidebar-hover)" }}
           >
-            <span>
-              <i className="fas fa-file-invoice"></i>
-              {!collapsed && <span className="ms-2">PO</span>}
-            </span>
-            {!collapsed && (
-              <i
-                className="fas fa-chevron-right"
-                style={{
-                  transform: openPO ? "rotate(90deg)" : "rotate(0deg)",
-                  transition: "0.3s",
-                }}
-              />
-            )}
+            <Avatar
+              size={28}
+              style={{
+                background: "linear-gradient(135deg, #4f46e5, #818cf8)",
+                fontSize: 10,
+                fontWeight: 700,
+                flexShrink: 0,
+              }}
+            >
+              {initials}
+            </Avatar>
+            <div className="min-w-0">
+              <p
+                className="text-xs font-medium truncate leading-tight"
+                style={{ color: "var(--color-text)" }}
+              >
+                {email || "User"}
+              </p>
+              <p
+                className="text-[11px] truncate leading-tight"
+                style={{ color: "var(--color-sidebar-dim)" }}
+              >
+                Member
+              </p>
+            </div>
           </div>
+        )}
 
-          {openPO && !collapsed && (
-            <ul className="nav flex-column ms-3">
-              <li className="nav-item">
-                <NavLink
-                  to="/exportPO"
-                  onClick={onLinkClick}
-                  className={({ isActive }) =>
-                    "nav-link " + (isActive ? "active-gold" : "text-white")
-                  }
-                >
-                  <i className="fas fa-file-export me-2"></i>
-                  Export PO
-                </NavLink>
-              </li>
-            </ul>
-          )}
-        </li>
+        {/* Logout */}
+        <Tooltip title={collapsed ? "Logout" : ""} placement="right">
+          <button
+            onClick={handleLogout}
+            className={`nav-item ${collapsed ? "nav-item-centered" : ""}`}
+            style={{ color: "#ef4444" }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          >
+            <LogoutOutlined style={{ fontSize: 15, flexShrink: 0 }} />
+            {!collapsed && <span>Logout</span>}
+          </button>
+        </Tooltip>
 
-      </ul>
-
-      <div className="mt-auto">
-        <hr className="border-white opacity-25" />
-        <button
-          className="nav-link text-white sidebar-logout"
-          onClick={handleLogout}
-        >
-          <i className="fas fa-sign-out-alt"></i>
-          {!collapsed && <span className="ms-2">Logout</span>}
-        </button>
-        <p
-          className="text-center text-white-50 mt-2 mb-0"
-          style={{ fontSize: "0.75rem" }}
-        >
-          2026 Version : Develop
-        </p>
+        {!collapsed && (
+          <p
+            className="text-center text-[11px] pt-1"
+            style={{ color: "var(--color-sidebar-dim)" }}
+          >
+            v2026 · Development
+          </p>
+        )}
       </div>
     </div>
   );

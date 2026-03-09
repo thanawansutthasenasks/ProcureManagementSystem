@@ -3,12 +3,11 @@ import { createRoot } from "react-dom/client";
 import { PublicClientApplication, EventType } from "@azure/msal-browser";
 import type { AuthenticationResult } from "@azure/msal-browser";
 import { MsalProvider } from "@azure/msal-react";
-import "bootstrap/dist/css/bootstrap.min.css"; 
-import "@fortawesome/fontawesome-free/css/all.min.css";
 import App from "./App";
 import { msalConfig } from "./auth/authConfig";
-import "./index.css";
+import "../src/index.css";
 const msalInstance = new PublicClientApplication(msalConfig);
+import { ConfigProvider } from 'antd';
 
 // ⭐ สำคัญที่สุด — set active account หลัง login
 msalInstance.addEventCallback((event) => {
@@ -21,7 +20,15 @@ msalInstance.addEventCallback((event) => {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <MsalProvider instance={msalInstance}>
-      <App />
+      <ConfigProvider
+        theme={{
+          token: {
+            fontFamily: '"Sarabun", sans-serif'
+          }
+        }}
+      >
+        <App />
+      </ConfigProvider>
     </MsalProvider>
   </StrictMode>
 );

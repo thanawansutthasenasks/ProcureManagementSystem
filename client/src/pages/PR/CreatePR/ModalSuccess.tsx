@@ -15,7 +15,7 @@ const ModalSuccess: React.FC<Props> = ({ show, prNumber, onClose }) => {
         <div className="modal-content">
 
           <div className="modal-header bg-danger text-white">
-            
+
             <h5 className="modal-title"><i className="fa-regular fa-bell"></i>  Notication</h5>
             <button className="btn-close" onClick={onClose}></button>
           </div>

@@ -1,22 +1,27 @@
 import React, { useEffect, useState } from "react";
+import { Modal, Button, Input } from "antd";
+import {
+    CheckCircleFilled,
+    CloseCircleFilled,
+    ExclamationCircleFilled,
+    InfoCircleFilled,
+    MailOutlined,
+    FileProtectOutlined,
+} from "@ant-design/icons";
 
-// BaseModal
+// ─── BaseModal ─────────────────────────────────────────────────────────────────
 
 export interface BaseModalProps {
     show: boolean;
-    // ขนาด dialog md (default) หรือตัวเลข px
     size?: "sm" | "md" | "lg" | "xl" | number;
-    // เรียกเมื่อกด backdrop
     onClose: () => void;
-    // ซ่อนปุ่ม × มุมขวาบน
     hideCloseButton?: boolean;
-    // ปิดเมื่อคลิก backdrop (default: true)
     closeOnBackdrop?: boolean;
     children: React.ReactNode;
 }
 
 const SIZE_MAP: Record<string, number> = {
-    sm: 300,
+    sm: 360,
     md: 480,
     lg: 640,
     xl: 800,
@@ -30,63 +35,61 @@ export const BaseModal: React.FC<BaseModalProps> = ({
     closeOnBackdrop = true,
     children,
 }) => {
-    if (!show) return null;
-
-    const maxWidth = typeof size === "number" ? size : SIZE_MAP[size] ?? SIZE_MAP.md;
+    const width = typeof size === "number" ? size : (SIZE_MAP[size] ?? SIZE_MAP.md);
 
     return (
-        <>
-            <div className="modal-backdrop fade show" />
-            <div
-                className="modal fade show d-block"
-                tabIndex={-1}
-                role="dialog"
-                onClick={e => { if (closeOnBackdrop && e.target === e.currentTarget) onClose(); }}
-            >
-                <div
-                    className="modal-dialog modal-dialog-centered"
-                    style={{ maxWidth }}
-                >
-                    <div className="modal-content rounded-4 shadow position-relative">
-                        {/* ปุ่ม × */}
-                        {!hideCloseButton && (
-                            <button
-                                type="button"
-                                className="btn-close position-absolute top-0 end-0 m-3"
-                                style={{ zIndex: 1 }}
-                                onClick={onClose}
-                                aria-label="Close"
-                            />
-                        )}
-                        {children}
-                    </div>
-                </div>
-            </div>
-        </>
+        <Modal
+            open={show}
+            onCancel={onClose}
+            footer={null}
+            width={width}
+            closable={!hideCloseButton}
+            // mask={{ closable: closeOnBackdrop }}
+            destroyOnHidden
+            centered
+            transitionName="ant-zoom"
+            maskTransitionName="ant-fade"
+        >
+            {children}
+        </Modal>
     );
 };
 
-// ModalResult
+// ─── ModalResult ───────────────────────────────────────────────────────────────
 
 export type ResultVariant = "success" | "error" | "warning" | "info";
 
 const RESULT_CONFIG: Record<
     ResultVariant,
-    { icon: string; bgClass: string; textClass: string; defaultTitle: string }
+    { icon: React.ReactNode; color: string; defaultTitle: string }
 > = {
-    success: { icon: "fa-check", bgClass: "bg-success", textClass: "text-success", defaultTitle: "สำเร็จ" },
-    error: { icon: "fa-times", bgClass: "bg-danger", textClass: "text-danger", defaultTitle: "เกิดข้อผิดพลาด" },
-    warning: { icon: "fa-exclamation-triangle", bgClass: "bg-warning", textClass: "text-warning", defaultTitle: "แจ้งเตือน" },
-    info: { icon: "fa-info", bgClass: "bg-info", textClass: "text-info", defaultTitle: "ข้อมูล" },
+    success: {
+        icon: <CheckCircleFilled style={{ fontSize: 28, color: "#22c55e" }} />,
+        color: "#22c55e",
+        defaultTitle: "สำเร็จ",
+    },
+    error: {
+        icon: <CloseCircleFilled style={{ fontSize: 28, color: "#ef4444" }} />,
+        color: "#ef4444",
+        defaultTitle: "เกิดข้อผิดพลาด",
+    },
+    warning: {
+        icon: <ExclamationCircleFilled style={{ fontSize: 28, color: "#f59e0b" }} />,
+        color: "#f59e0b",
+        defaultTitle: "แจ้งเตือน",
+    },
+    info: {
+        icon: <InfoCircleFilled style={{ fontSize: 28, color: "#6366f1" }} />,
+        color: "#6366f1",
+        defaultTitle: "ข้อมูล",
+    },
 };
 
 export interface ModalResultProps {
     show: boolean;
     variant?: ResultVariant;
-    // ถ้าไม่ระบุ ใช้ default ของ variant
     title?: string;
     message: string;
-    // ข้อความบนปุ่ม (default: "ตกลง")
     confirmLabel?: string;
     onClose: () => void;
 }
@@ -103,42 +106,43 @@ export const ModalResult: React.FC<ModalResultProps> = ({
 
     return (
         <BaseModal show={show} size="sm" onClose={onClose}>
-            <div className="modal-body text-center p-4 p-md-5">
-                {/* Icon */}
+            <div className="flex flex-col items-center text-center px-4 py-6 gap-3">
                 <div
-                    className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 ${cfg.bgClass} bg-opacity-10 ${cfg.textClass}`}
-                    style={{ width: 56, height: 56, fontSize: 22 }}
+                    className="w-14 h-14 rounded-full flex items-center justify-center"
+                    style={{ background: `${cfg.color}18` }}
                 >
-                    <i className={`fas ${cfg.icon}`} />
+                    {cfg.icon}
                 </div>
-
-                <h5 className="fw-bold mb-2">{title ?? cfg.defaultTitle}</h5>
-                <p className="text-muted mb-4" style={{ fontSize: 13.5 }}>{message}</p>
-
-                <button
-                    type="button"
-                    className={`btn w-100 ${variant === "success" ? "btn-success" : variant === "error" ? "btn-danger" : variant === "warning" ? "btn-warning" : "btn-info"}`}
+                <div className="space-y-1">
+                    <h5 className="text-base font-bold" style={{ color: "var(--color-text)" }}>
+                        {title ?? cfg.defaultTitle}
+                    </h5>
+                    <p className="text-sm" style={{ color: "var(--color-text-sub)" }}>
+                        {message}
+                    </p>
+                </div>
+                <Button
+                    type="primary"
+                    block
                     onClick={onClose}
+                    style={{ background: cfg.color, borderColor: cfg.color, marginTop: 4 }}
                 >
                     {confirmLabel}
-                </button>
+                </Button>
             </div>
         </BaseModal>
     );
 };
 
-// ModalConfirm
+// ─── ModalConfirm ──────────────────────────────────────────────────────────────
 
 export interface ModalConfirmProps {
     show: boolean;
     variant?: ResultVariant;
     title?: string;
     message: string;
-    // ข้อความปุ่มยืนยัน (default: "ยืนยัน")
     confirmLabel?: string;
-    // ข้อความปุ่มยกเลิก (default: "ยกเลิก")
     cancelLabel?: string;
-    // แสดง spinner บนปุ่มยืนยัน
     loading?: boolean;
     onConfirm: () => void;
     onClose: () => void;
@@ -156,51 +160,44 @@ export const ModalConfirm: React.FC<ModalConfirmProps> = ({
     onClose,
 }) => {
     const cfg = RESULT_CONFIG[variant];
-    const btnClass =
-        variant === "error" ? "btn-danger" :
-            variant === "success" ? "btn-success" :
-                variant === "info" ? "btn-info" :
-                    "btn-warning";
 
     return (
         <BaseModal show={show} size="sm" onClose={onClose} closeOnBackdrop={!loading}>
-            <div className="modal-body text-center p-4 p-md-5">
-                {/* Icon */}
+            <div className="flex flex-col items-center text-center px-4 py-6 gap-3">
                 <div
-                    className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 ${cfg.bgClass} bg-opacity-10 ${cfg.textClass}`}
-                    style={{ width: 56, height: 56, fontSize: 22 }}
+                    className="w-14 h-14 rounded-full flex items-center justify-center"
+                    style={{ background: `${cfg.color}18` }}
                 >
-                    <i className={`fas ${cfg.icon}`} />
+                    {cfg.icon}
                 </div>
-
-                <h5 className="fw-bold mb-2">{title ?? cfg.defaultTitle}</h5>
-                <p className="text-muted mb-4" style={{ fontSize: 13.5 }}>{message}</p>
-
-                <div className="d-flex gap-2 justify-content-center">
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary flex-fill"
-                        onClick={onClose}
-                        disabled={loading}
-                    >
+                <div className="space-y-1">
+                    <h5 className="text-base font-bold" style={{ color: "var(--color-text)" }}>
+                        {title ?? cfg.defaultTitle}
+                    </h5>
+                    <p className="text-sm" style={{ color: "var(--color-text-sub)" }}>
+                        {message}
+                    </p>
+                </div>
+                <div className="flex gap-2 w-full mt-1">
+                    <Button block onClick={onClose} disabled={loading}>
                         {cancelLabel}
-                    </button>
-                    <button
-                        type="button"
-                        className={`btn ${btnClass} flex-fill d-flex align-items-center justify-content-center gap-2`}
+                    </Button>
+                    <Button
+                        block
+                        type="primary"
+                        loading={loading}
                         onClick={onConfirm}
-                        disabled={loading}
+                        style={{ background: cfg.color, borderColor: cfg.color }}
                     >
-                        {loading && <i className="fas fa-spinner fa-spin" />}
                         {confirmLabel}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </BaseModal>
     );
 };
 
-// ModalEmail  (PO-specific)
+// ─── ModalEmail ────────────────────────────────────────────────────────────────
 
 export interface EmailPayload {
     poNumber: string;
@@ -216,7 +213,6 @@ export interface POListItem {
 
 export interface ModalEmailProps {
     show: boolean;
-    // รายการ PO ที่จะส่ง
     selectedPOs: POListItem[];
     mode: "individual" | "bulk";
     submitting: boolean;
@@ -241,16 +237,8 @@ export const ModalEmail: React.FC<ModalEmailProps> = ({
 
     useEffect(() => {
         if (show) {
-            // เช็กว่าถ้าเลือกอันเดียว และ PO ใบแรกมี VendorEmail ให้ใช้อันนั้น
             const contactEmail = selectedPOs[0]?.VendorEmail;
-
-            if (mode === "individual" && contactEmail) {
-                setTo(contactEmail);
-            } else {
-                // ถ้าไม่มีอีเมล หรือเป็นโหมด Bulk ส่งหลายใบ ให้ค่า Default เป็นเมลนี้
-                setTo("");
-            }
-
+            setTo(mode === "individual" && contactEmail ? contactEmail : "");
             setCc("");
             setError("");
         }
@@ -258,124 +246,111 @@ export const ModalEmail: React.FC<ModalEmailProps> = ({
 
     const handleConfirm = async () => {
         if (!to.trim()) { setError("กรุณากรอก Email ผู้รับ"); return; }
-
-        const toList = to.split(",").map(e => e.trim());
-        if (toList.some(e => !validateEmail(e))) { setError("รูปแบบ Email ไม่ถูกต้อง"); return; }
-
+        const toList = to.split(",").map((e) => e.trim());
+        if (toList.some((e) => !validateEmail(e))) { setError("รูปแบบ Email ไม่ถูกต้อง"); return; }
         if (cc.trim()) {
-            const ccList = cc.split(",").map(e => e.trim());
-            if (ccList.some(e => !validateEmail(e))) { setError("รูปแบบ Email CC ไม่ถูกต้อง"); return; }
+            const ccList = cc.split(",").map((e) => e.trim());
+            if (ccList.some((e) => !validateEmail(e))) { setError("รูปแบบ Email CC ไม่ถูกต้อง"); return; }
         }
-
         setError("");
         await onConfirm(
-            selectedPOs.map(po => ({ poNumber: po.PONumber, to: to.trim(), cc: cc.trim() }))
+            selectedPOs.map((po) => ({ poNumber: po.PONumber, to: to.trim(), cc: cc.trim() }))
         );
     };
 
     return (
         <BaseModal show={show} size="md" onClose={onClose} closeOnBackdrop={!submitting}>
             {/* Header */}
-            <div className="modal-header">
-                <div className="d-flex align-items-center gap-3">
-                    <div
-                        className="rounded-3 bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center flex-shrink-0"
-                        style={{ width: 38, height: 38, fontSize: 16 }}
-                    >
-                        <i className="fas fa-envelope" />
-                    </div>
-                    <div>
-                        <h5 className="modal-title fw-bold mb-0" style={{ fontSize: 15 }}>
-                            ส่ง PO ทาง Email
-                        </h5>
-                        <p className="text-muted mb-0" style={{ fontSize: 12.5 }}>
-                            {mode === "bulk"
-                                ? `${selectedPOs.length} รายการที่เลือก`
-                                : `PO: ${selectedPOs[0]?.PONumber}`}
-                        </p>
-                    </div>
+            <div className="flex items-center gap-3 pb-4 border-b" style={{ borderColor: "var(--color-border)" }}>
+                <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: "#ef44441a", color: "#ef4444" }}
+                >
+                    <MailOutlined style={{ fontSize: 16 }} />
+                </div>
+                <div>
+                    <p className="font-semibold text-sm" style={{ color: "var(--color-text)" }}>
+                        ส่ง PO ทาง Email
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--color-text-sub)" }}>
+                        {mode === "bulk"
+                            ? `${selectedPOs.length} รายการที่เลือก`
+                            : `PO: ${selectedPOs[0]?.PONumber}`}
+                    </p>
                 </div>
             </div>
 
             {/* Body */}
-            <div className="modal-body d-flex flex-column gap-3">
-                {/* PO chips (bulk) */}
+            <div className="py-4 space-y-4">
                 {mode === "bulk" && selectedPOs.length > 0 && (
-                    <div className="d-flex flex-wrap gap-2">
-                        {selectedPOs.map(po => (
+                    <div className="flex flex-wrap gap-2">
+                        {selectedPOs.map((po) => (
                             <span
                                 key={po.PONumber}
-                                className="badge rounded-pill text-bg-light border fw-normal"
-                                style={{ fontSize: 12 }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border"
+                                style={{
+                                    background: "var(--color-surface)",
+                                    borderColor: "var(--color-border)",
+                                    color: "var(--color-text-sub)",
+                                }}
                             >
-                                <i className="fas fa-file-invoice me-1" />
+                                <FileProtectOutlined style={{ fontSize: 11 }} />
                                 {po.PONumber}
                             </span>
                         ))}
                     </div>
                 )}
-
-                {/* To */}
-                <div>
-                    <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
-                        Email ผู้รับ <span className="text-danger">*</span>
+                <div className="space-y-1">
+                    <label className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
+                        Email ผู้รับ <span className="text-red-500">*</span>
                     </label>
-                    <input
-                        type="text"
-                        className="form-control"
+                    <Input
                         placeholder="example@company.com, another@company.com"
                         value={to}
-                        onChange={e => setTo(e.target.value)}
+                        onChange={(e) => setTo(e.target.value)}
                         disabled={submitting}
                     />
-                    <div className="form-text">คั่นหลาย email ด้วย comma ( , )</div>
+                    <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                        คั่นหลาย email ด้วย comma ( , )
+                    </p>
                 </div>
-
-                {/* CC */}
-                <div>
-                    <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
+                <div className="space-y-1">
+                    <label className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
                         CC (ถ้ามี)
                     </label>
-                    <input
-                        type="text"
-                        className="form-control"
+                    <Input
                         placeholder="cc@company.com"
                         value={cc}
-                        onChange={e => setCc(e.target.value)}
+                        onChange={(e) => setCc(e.target.value)}
                         disabled={submitting}
                     />
-                    <div className="form-text">คั่นหลาย email ด้วย comma ( , )</div>
+                    <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                        คั่นหลาย email ด้วย comma ( , )
+                    </p>
                 </div>
-
-                {/* Error */}
                 {error && (
-                    <div className="alert alert-danger d-flex align-items-center gap-2 py-2 mb-0" role="alert">
-                        <i className="fas fa-exclamation-circle flex-shrink-0" />
-                        <span style={{ fontSize: 13 }}>{error}</span>
+                    <div
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
+                        style={{ background: "#fee2e2", color: "#be123c" }}
+                    >
+                        <ExclamationCircleFilled style={{ fontSize: 13, flexShrink: 0 }} />
+                        <span>{error}</span>
                     </div>
                 )}
             </div>
 
             {/* Footer */}
-            <div className="modal-footer">
-                <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={onClose}
-                    disabled={submitting}
-                >
-                    ยกเลิก
-                </button>
-                <button
-                    type="button"
-                    className="btn btn-danger d-flex align-items-center gap-2"
+            <div className="flex justify-end gap-2 pt-4 border-t" style={{ borderColor: "var(--color-border)" }}>
+                <Button onClick={onClose} disabled={submitting}>ยกเลิก</Button>
+                <Button
+                    type="primary"
+                    danger
+                    loading={submitting}
+                    icon={!submitting ? <MailOutlined /> : undefined}
                     onClick={handleConfirm}
-                    disabled={submitting}
                 >
-                    {submitting
-                        ? <><i className="fas fa-spinner fa-spin" />กำลังส่ง...</>
-                        : <><i className="fas fa-paper-plane" />ส่ง Email</>}
-                </button>
+                    {submitting ? "กำลังส่ง..." : "ส่ง Email"}
+                </Button>
             </div>
         </BaseModal>
     );

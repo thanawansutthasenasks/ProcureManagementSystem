@@ -9,7 +9,7 @@ import {
     type EmailPayload,
 } from "../../../components/Modals";
 import ReactPaginate from "react-paginate";
-import "bootstrap/dist/css/bootstrap.min.css";
+// import "bootstrap/dist/css/bootstrap.min.css";
 
 const API_BASE = "http://localhost:3001";
 // Handlebars Helpers

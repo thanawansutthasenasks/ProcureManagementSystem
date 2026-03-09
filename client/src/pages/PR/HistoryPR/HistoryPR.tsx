@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from "react";
-import ReactPaginate from "react-paginate";
-import "bootstrap/dist/css/bootstrap.min.css";
-//
+import {
+  Input, Button, DatePicker, Spin, Tag, Pagination, Modal, Table,
+} from "antd";
+import {
+  SearchOutlined, CalendarOutlined, StopOutlined, DownOutlined, RightOutlined, BarChartOutlined
+} from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
+import { useMsal } from "@azure/msal-react";
 import ModalCancelSap from "./ModalCancelSap";
+import TopMaterialChart from "./TopMaterialChart";
 import OutletSelect from "../../../components/OutletSelect";
 import type { Outlet } from "../../../components/OutletSelect";
-import { useMsal } from "@azure/msal-react";
+
 const API_BASE = "http://localhost:3001";
+
 interface PRItem {
   prNumber: string;
   pr_date: string;
@@ -22,121 +30,75 @@ interface PRItem {
   vendorName: string;
 }
 
-const ReportPR: React.FC = () => {
+const HistoryPR: React.FC = () => {
   const [data, setData] = useState<PRItem[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-
   const [prNumber, setPrNumber] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [page, setPage] = useState(1);
-  const pageSize = 10; //  10 PR ต่อหน้า
   const [total, setTotal] = useState(0);
-  const { accounts } = useMsal();
-  const claims: any = accounts[0]?.idTokenClaims;
-  const roles: string[] = claims?.roles || [];
-
-  const isAdmin = roles.includes("Admin");
-  const isOutlet = roles.includes("outlet");
   const [searched, setSearched] = useState(false);
-  const [, setSearchKey] = useState(0);
   const [loading, setLoading] = useState(false);
+
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedPR, setSelectedPR] = useState<string | null>(null);
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
-  useEffect(() => {
-    const fetchOutlets = async () => {
-      if (!accounts[0]) return;
 
-      const token = accounts[0].idToken;
-      const claims: any = accounts[0].idTokenClaims;
-      const roles: string[] = claims?.roles || [];
+  const [isChartModalOpen, setIsChartModalOpen] = useState(false);
+  const [chartSearchKey, setChartSearchKey] = useState(0);
 
-      const email =
-        accounts[0].username ||
-        claims?.preferred_username ||
-        "";
-
-      const outletCode = email.split(".")[0].trim();
-
-      const url = roles.includes("Admin")
-        ? `${API_BASE}/api/outlet/list`
-        : `${API_BASE}/api/outlet/me?outletCode=${outletCode}`;
-
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const json = await res.json();
-
-      setOutlets(Array.isArray(json) ? json : [json]);
-    };
-
-    fetchOutlets();
-  }, [accounts]);
+  const pageSize = 10;
+  const { accounts } = useMsal();
+  const claims = accounts[0]?.idTokenClaims as any;
+  const roles = (claims?.roles as string[]) || [];
+  const isAdmin = roles.includes("Admin");
+  const isOutlet = roles.includes("outlet");
 
   useEffect(() => {
     if (!accounts[0]) return;
-    if (outlets.length === 0) return;
-
-    const claims: any = accounts[0].idTokenClaims;
-    const roles: string[] = claims?.roles || [];
-
-    // ทำเฉพาะ user role outlet
-    if (!roles.includes("outlet")) return;
-
-    const email: string =
-      claims?.preferred_username || claims?.email || "";
-
-    if (!email) return;
-
+    const token = accounts[0].idToken;
+    const email = accounts[0].username || claims?.preferred_username || "";
     const outletCode = email.split(".")[0].trim();
+    const url = isAdmin
+      ? `${API_BASE}/api/outlet/list`
+      : `${API_BASE}/api/outlet/me?outletCode=${outletCode}`;
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((json) => setOutlets(Array.isArray(json) ? json : [json]))
+      .catch(console.error);
+  }, [accounts, isAdmin]);
 
-    const matchedOutlet = outlets.find(
-      o => o.outletcode?.trim() === outletCode
-    );
-
-    if (matchedOutlet) {
-      setSelectedOutlet(matchedOutlet);
-    }
-  }, [accounts, outlets]);
   useEffect(() => {
-    if (!selectedOutlet) return;
-    if (!accounts[0]) return;
+    if (!accounts[0] || outlets.length === 0 || !isOutlet) return;
+    const email = (claims?.preferred_username || claims?.email || "") as string;
+    if (!email) return;
+    const outletCode = email.split(".")[0].trim();
+    const matched = outlets.find((o) => o.outletcode?.trim() === outletCode);
+    if (matched) setSelectedOutlet(matched);
+  }, [accounts, outlets, isOutlet]);
 
-    const claims: any = accounts[0].idTokenClaims;
-    const roles: string[] = claims?.roles || [];
-
-    // auto search เฉพาะ role outlet
-    if (!roles.includes("outlet")) return;
-
+  useEffect(() => {
+    if (!selectedOutlet || !accounts[0] || !isOutlet) return;
     setPage(1);
-    setSearchKey(prev => prev + 1);
     setSearched(true);
     loadData();
-  }, [selectedOutlet, accounts]);
+  }, [selectedOutlet, accounts, isOutlet]);
 
+  useEffect(() => {
+    if (searched) loadData();
+  }, [page]);
 
   const loadData = async () => {
     setLoading(true);
-
     const params = new URLSearchParams({
-      prNumber,
-      fromDate,
-      toDate,
-      page: page.toString(),
-      pageSize: pageSize.toString(),
+      prNumber, fromDate, toDate,
+      page: page.toString(), pageSize: pageSize.toString(),
     });
-    if (selectedOutlet?.plant) {
-      params.append("plant", selectedOutlet.plant);
-    }
+    if (selectedOutlet?.plant) params.append("plant", selectedOutlet.plant);
     try {
-      const res = await fetch(
-        `${API_BASE}/api/history/pr?${params}`
-      );
+      const res = await fetch(`${API_BASE}/api/history/pr?${params}`);
       const json = await res.json();
       setData(json.data);
       setTotal(json.total);
@@ -146,13 +108,43 @@ const ReportPR: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (searched) {
-      setPage(1);
-      setSearchKey(prev => prev + 1);
-    }
-  }, [selectedOutlet]);
+  const handleSearch = () => {
+    setPage(1);
+    setSearched(true);
+    loadData();
+    setChartSearchKey(prev => prev + 1);
+  };
 
+  const confirmCancelPR = async (prNum: string) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE}/api/sap/cancelpr2sap`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accounts[0].idToken}`,
+        },
+        body: JSON.stringify({ prNumber: prNum }),
+      });
+      if (!res.ok) throw new Error("Cancel failed");
+      setShowCancelModal(false);
+      setSelectedPR(null);
+      loadData();
+    } catch {
+      // handle silently
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (d: string) => new Date(d.replace(" ", "T")).toLocaleDateString("th-TH");
+
+  const isOver24H = (prDate: string) => {
+    if (!prDate) return false;
+    return Date.now() - new Date(prDate.replace(" ", "T")).getTime() > 24 * 60 * 60 * 1000;
+  };
+
+  const toggle = (pr: string) => setExpanded((prev) => ({ ...prev, [pr]: !prev[pr] }));
 
   const groupedArray = Object.values(
     data.reduce<Record<string, PRItem[]>>((acc, row) => {
@@ -160,288 +152,236 @@ const ReportPR: React.FC = () => {
       acc[row.prNumber].push(row);
       return acc;
     }, {})
-  ).sort((a, b) => {
-    return (
-      new Date(b[0].pr_date).getTime() -
-      new Date(a[0].pr_date).getTime()
-    );
-  });
+  ).sort((a, b) => new Date(b[0].pr_date).getTime() - new Date(a[0].pr_date).getTime());
 
-  const toggle = (pr: string) => {
-    setExpanded(prev => ({ ...prev, [pr]: !prev[pr] }));
-  };
-
-  const formatDate = (d: string) =>
-    new Date(d.replace(" ", "T")).toLocaleDateString("th-TH");
-
-  const totalPages = Math.ceil(total / pageSize);
-
-
-  const confirmCancelPR = async (prNumber: string) => {
-    try {
-      setLoading(true);
-
-      const res = await fetch(
-        `${API_BASE}/api/sap/cancelpr2sap`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accounts[0].idToken}`,
-          },
-          body: JSON.stringify({ prNumber }),
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error("Cancel failed");
-      }
-
-      setShowCancelModal(false);
-      setSelectedPR(null);
-      loadData();
-    } catch (err) {
-      alert("ไม่สามารถยกเลิก PR ได้");
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    if (searched) {
-      loadData();
-    }
-  }, [page]);
-
-  const isOver24H = (prDate: string) => {
-    if (!prDate) return false;
-
-    const prTime = new Date(prDate.replace(" ", "T")).getTime();
-    const now = Date.now();
-
-    return now - prTime > 24 * 60 * 60 * 1000;
-  };
+  const lineColumns: ColumnsType<PRItem> = [
+    { title: "Line", dataIndex: "line_item", width: 64, align: "center" },
+    { title: "Material", dataIndex: "Material", width: 130 },
+    { title: "Description", dataIndex: "Material_Description", ellipsis: true },
+    { title: "Qty", dataIndex: "qty", width: 72, align: "center" },
+    { title: "Unit", dataIndex: "Base_Unit_of_Measure", width: 64, align: "center" },
+    { title: "Plant", dataIndex: "Plant", width: 72, align: "center" },
+    { title: "Plant Name", dataIndex: "Name_1", width: 160 },
+  ];
 
   return (
+    <div className="w-full h-full flex flex-col space-y-4">
 
-    <div className="card shadow-sm">
-      <div className="card shadow-sm mb-3">
-        <div className="card-body">
-          <div className="row align-items-end">
-            <div className="col-md-4">
+      {/* ── 1. Search Card ── */}
+      <div className="flex-none card p-5 w-full">
+        <h2 className="text-base font-semibold mb-4" style={{ color: "var(--color-text)" }}>
+          PR Report
+        </h2>
 
-              {/* ===== ADMIN: เลือกสาขาได้ ===== */}
-              {isAdmin && (
-                <OutletSelect
-                  outlets={outlets}
-                  value={selectedOutlet}
-                  onChange={setSelectedOutlet}
-                />
-              )}
-
-              {isOutlet && selectedOutlet && (
-                <input
-                  className="form-control"
-                  value={`${selectedOutlet.outletcode} - ${selectedOutlet.outletname}`}
-                  disabled
-                />
-              )}
-
+        <div className="flex flex-wrap gap-3 items-end">
+          {isAdmin && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
+                สาขา
+              </label>
+              <OutletSelect outlets={outlets} value={selectedOutlet} onChange={setSelectedOutlet} />
             </div>
+          )}
 
-          </div>
-        </div>
-      </div>
+          {isOutlet && selectedOutlet && (
+            <div className="flex flex-col gap-1.5 min-w-[220px]">
+              <label className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
+                สาขา
+              </label>
+              <Input value={`${selectedOutlet.outletcode} - ${selectedOutlet.outletname}`} disabled style={{ width: "100%" }} />
+            </div>
+          )}
 
-      <div className="card shadow-sm mb-4">
-        {/* <div className="card-header bg-dark text-white">
-          <h6 className="mb-0">Top 10 Material (By Qty)</h6>
-          <small className="text-white-50">
-            {fromDate || "All"} - {toDate || "All"}
-          </small>
-        </div> */}
-
-        {/* <div className="card-body">
-
-          <TopMaterialChart
-            fromDate={fromDate}
-            toDate={toDate}
-            plant={selectedOutlet?.plant}
-            searchKey={searchKey}
-          />
-        </div> */}
-
-      </div>
-      <div className="card-header bg-gold text-white">
-        <h5 className="mb-0">PR Report</h5>
-      </div>
-
-      <div className="card-body">
-        {/* ===== SEARCH ===== */}
-        <div className="row g-2 mb-3">
-          <div className="col-md-3">
-            <input
-              className="form-control"
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>PR Number</label>
+            <Input
+              prefix={<SearchOutlined style={{ color: "var(--color-text-muted)" }} />}
               placeholder="PR Number"
               value={prNumber}
-              onChange={e => setPrNumber(e.target.value)}
+              onChange={(e) => setPrNumber(e.target.value)}
+              style={{ width: 180 }}
+              allowClear
             />
           </div>
 
-          <div className="col-md-3">
-            <input
-              type="date"
-              className="form-control"
-              value={fromDate}
-              onChange={e => setFromDate(e.target.value)}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>From</label>
+            <DatePicker
+              value={fromDate ? dayjs(fromDate) : null}
+              format="YYYY-MM-DD" style={{ width: 148 }}
+              onChange={(d) => setFromDate(d ? d.format("YYYY-MM-DD") : "")}
+              placeholder="From date"
             />
           </div>
 
-          <div className="col-md-3">
-            <input
-              type="date"
-              className="form-control"
-              value={toDate}
-              min={fromDate || undefined}
-              onChange={e => setToDate(e.target.value)}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>To</label>
+            <DatePicker
+              value={toDate ? dayjs(toDate) : null}
+              format="YYYY-MM-DD" style={{ width: 148 }}
+              disabledDate={(current) => fromDate ? current && current < dayjs(fromDate).startOf("day") : false}
+              onChange={(d) => setToDate(d ? d.format("YYYY-MM-DD") : "")}
+              placeholder="To date"
             />
           </div>
 
-          <div className="col-md-3">
-            <button
-              className="btn btn-outline-primary w-100"
-              onClick={() => {
-                console.log("SELECTED OUTLET:", selectedOutlet);
-                setPage(1);
-                setSearchKey(prev => prev + 1);
-                setSearched(true);
-                loadData();
-              }}
-            >
-              Search
-            </button>
-          </div>
+          <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
+            Search
+          </Button>
+        </div>
+      </div>
+
+      {/* ── 2. Results Card (ล็อก Pagenation ติดหนึบด้านล่าง) ── */}
+      <div className="flex flex-1 flex-col card p-0 w-full overflow-hidden">
+
+        {/* Header ติดหนึบด้านบน */}
+        <div className="flex-none flex justify-between items-center px-5 py-4 border-b" style={{ borderColor: "var(--color-border)" }}>
+          <h3 className="text-base font-semibold m-0" style={{ color: "var(--color-text)" }}>PR List</h3>
+          <Button icon={<BarChartOutlined />} onClick={() => {
+            setIsChartModalOpen(true);
+            if (chartSearchKey === 0) setChartSearchKey(1);
+          }}>
+            Analytics
+          </Button>
         </div>
 
-        {loading && <div className="text-center py-4">Loading...</div>}
+        {/* Body พื้นที่เลื่อนได้อิสระ */}
+        <div className="flex-1 overflow-y-auto p-5">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Spin size="large" />
+              <span className="text-sm" style={{ color: "var(--color-text-sub)" }}>Loading...</span>
+            </div>
+          ) : !searched ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-2">
+              <CalendarOutlined style={{ fontSize: 36, color: "var(--color-text-muted)" }} />
+              <p className="text-sm" style={{ color: "var(--color-text-sub)" }}>
+                Please enter some filter and click Search.
+              </p>
+            </div>
+          ) : groupedArray.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-2">
+              <SearchOutlined style={{ fontSize: 36, color: "var(--color-text-muted)" }} />
+              <p className="text-sm" style={{ color: "var(--color-text-sub)" }}>ไม่พบข้อมูล</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {groupedArray.map((items) => {
+                const prNum = items[0].prNumber;
+                const over24H = isOver24H(items[0].pr_date);
+                const isCanceled = items[0].status_d === 0;
+                const isOpen = expanded[prNum];
 
-
-        {!loading &&
-          groupedArray.map(items => {
-            const prNumber = items[0].prNumber;
-            const over24H = isOver24H(items[0].pr_date);
-            const isCanceled = items[0].status_d === 0;
-            return (
-
-              <div key={prNumber} className="mb-3 border rounded">
-                <div
-                  className="d-flex justify-content-between align-items-center px-3 py-2 bg-light"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => toggle(prNumber)}
-                >
-                  <div className={isCanceled ? "text-danger" : ""}>
-                    <strong>PR :</strong> {prNumber}
-                    <span className={`ms-3 ${isCanceled ? "text-danger" : "text-muted"}`}>
-                      <strong>Date :</strong> {formatDate(items[0].pr_date)}
-                    </span>
-                    <span className="ms-3">
-                      <strong>Vendor :</strong> {items[0].vendorName}
-                    </span>
-
-                  </div>
-
-                  <div className="d-flex align-items-center gap-2">
-                    <span
-                      className={`badge ${isCanceled ? "bg-danger" : "bg-secondary"}`}
-                      style={{ cursor: "pointer" }}
-                      onClick={() => toggle(prNumber)}
-                    >
-                      {expanded[prNumber] ? "Hide" : "Show"}
-                    </span>
-                    <button
-                      className="btn btn-sm btn-outline-danger"
-                      disabled={over24H || isCanceled}
-                      onClick={e => {
-                        e.stopPropagation();
-                        if (over24H || isCanceled) return;
-                        setSelectedPR(prNumber);
-                        setShowCancelModal(true);
+                return (
+                  <div
+                    key={prNum}
+                    className="rounded-xl overflow-hidden border"
+                    style={{ borderColor: isCanceled ? "#fecaca" : "var(--color-border)" }}
+                  >
+                    <div
+                      className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
+                      style={{
+                        background: isCanceled ? "#fff1f2" : "var(--color-surface)",
                       }}
+                      onClick={() => toggle(prNum)}
                     >
-                      Cancel
-                    </button>
+                      <div className="flex items-center gap-4 flex-wrap text-sm min-w-0">
+                        {/* 🌟 ปรับตัวอักษรให้บางลงและดูคลีนขึ้นตรงนี้ครับ */}
+                        <span className="font-medium" style={{ color: isCanceled ? "#ef4444" : "var(--color-text)" }}>
+                          {prNum}
+                        </span>
+                        <span style={{ color: "var(--color-text-muted)" }}>
+                          {formatDate(items[0].pr_date)}
+                        </span>
+                        {items[0].vendorName && (
+                          <span className="truncate" style={{ color: "var(--color-text-muted)" }}>
+                            {items[0].vendorName}
+                          </span>
+                        )}
+                        {isCanceled && (
+                          <Tag color="error" icon={<StopOutlined />}>Cancelled</Tag>
+                        )}
+                      </div>
 
+                      <div className="flex items-center gap-2 shrink-0 ml-3">
+                        {isOpen
+                          ? <DownOutlined style={{ fontSize: 11, color: "var(--color-text-sub)" }} />
+                          : <RightOutlined style={{ fontSize: 11, color: "var(--color-text-sub)" }} />
+                        }
+                        <Button
+                          size="small"
+                          danger
+                          disabled={over24H || isCanceled}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (over24H || isCanceled) return;
+                            setSelectedPR(prNum);
+                            setShowCancelModal(true);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+
+                    {isOpen && (
+                      <div style={{ borderTop: "1px solid var(--color-border)" }}>
+                        <Table<PRItem>
+                          dataSource={items}
+                          columns={lineColumns}
+                          rowKey="line_item"
+                          size="small"
+                          pagination={false}
+                          scroll={{ x: "max-content" }}
+                          style={{ borderRadius: 0 }}
+                        />
+                      </div>
+                    )}
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
-                {expanded[prNumber] && (
-                  <div className="table-responsive">
-                    <table className="table table-sm table-striped mb-0">
-                      <thead className="table-dark">
-                        <tr>
-                          <th>Line</th>
-                          <th>Material</th>
-                          <th>Description</th>
-                          <th className="text-center">Qty</th>
-                          <th className="text-center">Unit</th>
-                          <th className="text-center">Plant</th>
-                          <th>Plant Name</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map(row => (
-                          <tr key={row.line_item}>
-                            <td className="text-center">{row.line_item}</td>
-                            <td>{row.Material}</td>
-                            <td>{row.Material_Description}</td>
-                            <td className="text-center">{row.qty}</td>
-                            <td className="text-center">
-                              {row.Base_Unit_of_Measure}
-                            </td>
-                            <td className="text-center">{row.Plant}</td>
-                            <td>{row.Name_1}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            );
-          })
-        }
-
-
-        {searched && totalPages > 1 && (
-          <ReactPaginate
-            pageCount={totalPages}
-            forcePage={page - 1}
-            onPageChange={e => setPage(e.selected + 1)}
-            containerClassName="pagination justify-content-center mt-3"
-            pageClassName="page-item"
-            pageLinkClassName="page-link"
-            previousLabel="«"
-            nextLabel="»"
-            previousClassName="page-item me-1"
-            nextClassName="page-item ms-1"
-            previousLinkClassName="page-link"
-            nextLinkClassName="page-link"
-            activeClassName="active"
-          />
+        {/* 🌟 Footer ล็อกแถบ Pagination ไว้ด้านล่างเสมอ (ย้ายออกมานอกพื้นที่ Scroll) */}
+        {!loading && searched && total > pageSize && (
+          <div
+            className="flex-none flex justify-center py-3 border-t bg-white"
+            style={{ borderColor: "var(--color-border)" }}
+          >
+            <Pagination
+              current={page}
+              total={total}
+              pageSize={pageSize}
+              showSizeChanger={false}
+              onChange={(p) => setPage(p)}
+            />
+          </div>
         )}
+
       </div>
+
+      <Modal
+        title={<div className="text-lg font-semibold border-b border-gray-200 pb-3 mb-2" style={{ color: "var(--color-text)" }}>Top 10 Materials (Analytics)</div>}
+        open={isChartModalOpen}
+        onCancel={() => setIsChartModalOpen(false)}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        <TopMaterialChart fromDate={fromDate} toDate={toDate} plant={selectedOutlet?.plant} searchKey={chartSearchKey} />
+      </Modal>
+
       <ModalCancelSap
         show={showCancelModal}
         prNumber={selectedPR}
         submitting={loading}
-        onClose={() => {
-          setShowCancelModal(false);
-          setSelectedPR(null);
-        }}
+        onClose={() => { setShowCancelModal(false); setSelectedPR(null); }}
         onConfirm={confirmCancelPR}
       />
-
     </div>
   );
 };
 
-export default ReportPR;
+export default HistoryPR;
