@@ -1,0 +1,547 @@
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  /*body {
+    font-family: "Sarabun", "TH Sarabun New", Arial, sans-serif;
+    font-size: 11pt;
+    color: #1a1a1a;
+  }*/
+
+  /*@font-face {
+    font-family: "Angsana New";
+    src: url("http://localhost:5173/fonts/ANGSA.ttf") format("truetype");
+    font-weight: normal;
+  }
+  @font-face {
+    font-family: "Angsana New";
+    src: url("http://localhost:5173/fonts/angsab.ttf")
+      format("truetype");
+    font-weight: bold;
+  }
+
+  body {
+    font-family: "Angsana New", Arial, sans-serif;
+    font-size: 16pt;
+    color: #1a1a1a;
+  }
+  */
+
+  @font-face {
+    font-family: "TH Sarabun New";
+    src: url("/server/public//fonts/THSarabunNewsss.ttf") format("truetype");
+    font-weight: normal;
+  }
+  @font-face {
+    font-family: "TH Sarabun New";
+    src: url("/server/public//fonts/THSarabunNew_Boldsss.ttf")
+      format("truetype");
+    font-weight: bold;
+  }
+
+  body {
+    font-family: "TH Sarabun New", Arial, sans-serif;
+    font-size: 16pt;
+    color: #1a1a1a;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 12mm 14mm 10mm;
+    position: relative;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  @media print {
+    body {
+      margin: 0;
+    }
+    .page {
+      page-break-after: always;
+    }
+    .page:last-child {
+      page-break-after: avoid;
+    }
+  }
+
+  /* Continuation Header (หน้า 2+) */
+  .continuation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12pt;
+    border-bottom: 1.5px solid #333;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+  .continuation-header .cont-label {
+    font-weight: bold;
+    color: #555;
+  }
+  .continuation-header .cont-po {
+    font-weight: bold;
+    color: #555;
+  }
+
+  /* Header */
+  .header-info-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    align-items: start;
+    margin-bottom: 8px;
+  }
+  .logo-wrap img {
+    height: 96px;
+    width: auto;
+    object-fit: contain;
+  }
+  .po-title-box {
+    border: 1.5px solid #333;
+    width: 100%;
+  }
+  .po-title-box .title-row {
+    text-align: center;
+    font-weight: bold;
+    font-size: 14pt;
+    padding: 4px 12px;
+    border-bottom: 1.5px solid #333;
+  }
+  .po-title-box .meta-row {
+    display: flex;
+  }
+  .po-title-box .meta-cell {
+    padding: 5px 10px;
+    font-size: 12pt;
+    flex: 1;
+  }
+  .po-title-box .meta-cell:first-child {
+    border-right: 1px solid #333;
+  }
+
+  /* Supplier / Company */
+  .supplier-col {
+    font-size: 12pt;
+    line-height: 1.2;
+  }
+  .supplier-col .supplier-name {
+    font-weight: bold;
+    font-size: 12pt;
+  }
+  .company-box {
+    border: 1.5px solid #333;
+    padding: 8px 10px;
+    font-size: 12pt;
+    line-height: 1.2;
+  }
+
+  /* Delivery / Terms */
+  .detail-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #555;
+  }
+  .detail-col {
+    flex: 1;
+    font-size: 12pt;
+    line-height: 1.2;
+  }
+  .detail-col .lbl {
+    font-weight: bold;
+  }
+
+  /* Items Table */
+  .items-section {
+    margin-top: 14px;
+  }
+  .items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12pt;
+  }
+  .items-table th {
+    border-top: 1px solid #555;
+    border-bottom: 1px solid #555;
+    border-left: none;
+    border-right: none;
+    padding: 5px 6px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .items-table td {
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    border-left: none;
+    border-right: none;
+    padding: 5px 6px;
+    vertical-align: top;
+  }
+  .items-table .col-no {
+    text-align: center;
+    width: 28px;
+  }
+  .items-table .col-code {
+    text-align: left;
+    width: 90px;
+  }
+  .items-table .col-desc {
+    text-align: left;
+  }
+  .items-table .col-date {
+    text-align: center;
+    width: 80px;
+    white-space: nowrap;
+  }
+  .items-table .col-qty {
+    text-align: right;
+    width: 80px;
+    white-space: nowrap;
+  }
+  .items-table .col-price {
+    text-align: right;
+    width: 72px;
+  }
+  .items-table .col-total {
+    text-align: right;
+    width: 80px;
+  }
+  .items-table tr.empty-row td {
+    border-top: none;
+    border-bottom: none;
+    height: 20px;
+  }
+
+  /* Summary */
+  .summary-section {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0;
+  }
+  .summary-table {
+    width: 260px;
+    border-collapse: collapse;
+    font-size: 12pt;
+  }
+  .summary-table td {
+    padding: 3px 8px;
+    border: 0px solid #888;
+  }
+  .summary-table .s-label {
+    font-weight: bold;
+    text-align: right;
+    width: 140px;
+  }
+  .summary-table .s-value {
+    text-align: right;
+  }
+  .amount-words {
+    text-align: right;
+    font-size: 12pt;
+    /*font-style: italic;*/
+    margin-top: 4px;
+    padding-right: 10px;
+  }
+
+  /* Remark */
+  .remark-section {
+    margin-top: 14px;
+    font-size: 12pt;
+    border-top: 1px solid #555;
+    padding-top: 8px;
+    line-height: 1.2;
+  }
+  .remark-section .lbl {
+    font-weight: bold;
+  }
+
+  /* Footer / Signature */
+  .footer-section {
+    margin-top: 20px;
+    border-top: 1.5px solid #333;
+    padding-top: 10px;
+  }
+
+  /*.footer-section {
+    position: absolute;
+    bottom: 10mm;
+    left: 14mm;
+    right: 14mm;
+  }
+  */
+
+  .sig-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1.5px solid #333;
+    font-size: 12pt;
+  }
+  .sig-table td {
+    border: 1px solid #333;
+    padding: 8px 12px;
+    vertical-align: top;
+  }
+  .sig-table .sig-lbl {
+    font-weight: bold;
+  }
+  .auth-wrap {
+    min-height: 52px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 2px;
+  }
+  .auth-line {
+    border-bottom: 1px dashed #999;
+    min-width: 160px;
+    margin-bottom: 3px;
+  }
+  .auth-bracket {
+    font-size: 12pt;
+    color: #444;
+    text-align: center;
+    font-weight: bold;
+  }
+  .vendor-row td {
+    height: 40px;
+  }
+
+  /* Notes */
+  .notes-section {
+    margin-top: 12px;
+    font-size: 12pt;
+    line-height: 1.2;
+    display: flex;
+    gap: 8px;
+  }
+  .notes-lbl {
+    white-space: nowrap;
+  }
+  .notes-list {
+    list-style: none;
+    padding: 0;
+  }
+  .notes-list li::before {
+    content: attr(data-n) ".  ";
+  }
+
+  /* Print Meta */
+  .print-meta {
+    position: absolute;
+    bottom: 10mm;
+    right: 14mm;
+    text-align: right;
+    font-size: 12pt;
+    color: #555;
+    line-height: 1.2;
+  }
+</style>
+
+<div class="page">
+
+  {{! หน้าแรก: Full Header }}
+  {{#if isFirstPage}}
+
+    <div class="header-info-wrap">
+      <div class="logo-wrap">
+        <img src="{{logoSrc}}" alt="Logo" />
+      </div>
+      <div class="po-title-box">
+        <div class="title-row">Purchasing Order</div>
+        <div class="meta-row">
+          <div class="meta-cell">PO No. &nbsp;{{po.poNumber}}</div>
+          <div class="meta-cell">PO Date &nbsp;{{po.poDate}}</div>
+        </div>
+      </div>
+
+      <div class="supplier-col">
+        <div class="supplier-name">Supplier No. {{supplier.supplierNo}}</div>
+        <div>{{supplier.companyName}}</div>
+        <div>{{supplier.address}}</div>
+        <div>Phone No. {{supplier.phone}}</div>
+        <div><strong>Contact person:</strong> {{supplier.contactPerson}}</div>
+        <div><strong>Contact email:</strong> {{supplier.contactEmail}}</div>
+      </div>
+
+      <div class="company-box">
+        <div>{{company.fullName}}</div>
+        <div>{{company.address}}</div>
+        <div>Phone No. {{company.phone}} &nbsp; Fax. {{company.fax}}</div>
+        <div style="margin-top:6px;">VAT Reg. No. {{company.vatRegNo}}</div>
+      </div>
+    </div>
+
+    <div class="detail-row">
+      <div class="detail-col">
+        <div><span class="lbl">Delivery Address:</span></div>
+        <div>{{delivery.address}}</div>
+        <div>Phone No. {{delivery.phone}}</div>
+      </div>
+      <div class="detail-col">
+        <div><span class="lbl">Purchasing group:</span>
+          {{po.purchasingGroup}}</div>
+        <div><span class="lbl">Payment Term:</span> {{po.paymentTerm}}</div>
+        <div><span class="lbl">Incoterm:</span> {{po.incoterm}}</div>
+        <div><span class="lbl">Port of Delivery:</span>
+          {{po.portOfDelivery}}</div>
+        <div><span class="lbl">Mode of Shipment:</span>
+          {{po.modeOfShipment}}</div>
+      </div>
+    </div>
+
+  {{else}}
+
+    {{! หน้า 2+: Continuation Header }}
+    <div class="continuation-header">
+      <span class="cont-label">Purchasing Order — Continued</span>
+      <span class="cont-po">PO No.
+        {{po.poNumber}}
+        &nbsp;|&nbsp;
+        {{po.poDate}}</span>
+    </div>
+
+  {{/if}}
+
+  {{! ITEMS TABLE }}
+  <div class="items-section">
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th class="col-no">No.</th>
+          <th class="col-code">Code</th>
+          <th class="col-desc">Description</th>
+          <th class="col-date">Delivery Date</th>
+          <th class="col-qty">Quantity</th>
+          <th class="col-price">Unit Price</th>
+          <th class="col-total">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each items}}
+          <tr>
+            <td class="col-no">{{lineNo}}</td>
+            <td class="col-code">{{materialCode}}</td>
+            <td class="col-desc">{{description}}</td>
+            <td class="col-date">{{deliveryDate}}</td>
+            <td class="col-qty">{{qty}} {{unit}}</td>
+            <td class="col-price">{{unitPrice}}</td>
+            <td class="col-total">{{lineTotal}}</td>
+          </tr>
+        {{/each}}
+        {{#each emptyRows}}
+          <tr class="empty-row">
+            <td class="col-no"></td>
+            <td class="col-code"></td>
+            <td class="col-desc"></td>
+            <td class="col-date"></td>
+            <td class="col-qty"></td>
+            <td class="col-price"></td>
+            <td class="col-total"></td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  {{! SUMMARY — เฉพาะหน้าสุดท้าย }}
+  {{#if isLastPage}}
+    <div class="summary-section">
+      <table class="summary-table">
+        <tr>
+          <td class="s-label">Total THB Excl. VAT</td>
+          <td class="s-value">{{summary.totalExclVat}}</td>
+        </tr>
+        <tr>
+          <td class="s-label">Discount</td>
+          <td class="s-value">{{summary.discount}}</td>
+        </tr>
+        <tr>
+          <td class="s-label">Net Amount</td>
+          <td class="s-value">{{summary.netAmount}}</td>
+        </tr>
+        <tr>
+          <td class="s-label">VAT</td>
+          <td class="s-value">{{summary.vat}}</td>
+        </tr>
+        <tr class="s-total">
+          <td class="s-label">Total THB</td>
+          <td class="s-value">{{summary.totalTHB}}</td>
+        </tr>
+      </table>
+    </div>
+    <div class="amount-words">{{summary.amountInWords}}</div>
+
+    <div class="remark-section">
+      <span class="lbl">Remark:</span>
+      <p>{{po.remark}}</p>
+      <p>Remark description 1</p>
+    </div>
+
+    <div class="footer-section">
+      <table class="sig-table">
+        <tr>
+          <td style="width:50%">
+            <span class="sig-lbl">Purchaser by: </span>
+            {{footer.purchaserCode}}
+            &nbsp;
+            {{footer.purchaserName}}
+            &nbsp;&nbsp;
+            <span class="sig-lbl">Date:</span>
+            {{footer.purchaseDate}}
+            <br />
+            <span style="padding-left:80px;"></span>
+            <span class="sig-lbl">Time:</span>
+            {{footer.purchaseTime}}
+          </td>
+          <td style="width:50%">
+            <span class="sig-lbl">Authorizer by:</span>
+            <div class="auth-wrap">
+              <div class="auth-line"></div>
+              <div class="auth-bracket">({{footer.authorizerName}})</div>
+            </div>
+            <span class="sig-lbl">Date:</span>
+            {{footer.authorizeDate}}
+            &nbsp;&nbsp;
+            <span class="sig-lbl">Time:</span>
+            {{footer.authorizeTime}}
+          </td>
+        </tr>
+        <tr class="vendor-row">
+          <td colspan="2">
+            <span class="sig-lbl">Vendor Received:</span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="sig-lbl">Date:</span>
+          </td>
+        </tr>
+      </table>
+
+      <div class="notes-section">
+        <span class="notes-lbl">NOTES:</span>
+        <ol class="notes-list">
+          {{#each footer.notes}}
+            <li data-n="{{numberPlus1 @index}}">{{this}}</li>
+          {{/each}}
+        </ol>
+      </div>
+    </div>
+  {{/if}}
+
+  {{! PRINT META — ทุกหน้า }}
+  <div class="print-meta">
+    Print: &nbsp;{{footer.printDateTime}}<br />
+    Page &nbsp;{{footer.pageNumber}}
+    /
+    {{footer.totalPages}}
+  </div>
+
+</div>

@@ -1,0 +1,7 @@
+.chevron {
+  transition: transform 0.25s ease;
+}
+
+.rotate {
+  transform: rotate(90deg);
+}

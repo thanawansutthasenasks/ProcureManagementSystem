@@ -1,0 +1,264 @@
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Purchase Order – Sukishi Intergroup</title>
+</head>
+
+<body style="margin:0; padding:0; background:#EDEFF4; font-family: Tahoma, Arial, sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+    style="background:#EDEFF4; padding:40px 0 48px;">
+    <tr>
+      <td align="center">
+        <!-- OUTER WRAPPER -->
+        <table width="640" cellpadding="0" cellspacing="0" role="presentation" style="max-width:640px; width:100%; background:#ffffff;
+            border:1px solid #D5D9E2;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+          <!-- LOGO BAR -->
+          <tr>
+            <td style="background:#ffffff; padding:24px 40px; border-bottom:1px solid #E8EAF0;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td style="vertical-align:middle;">
+                    <img src="https://res.cloudinary.com/dvupfsbqq/image/upload/v1772590910/sukishi_bzsb3w.png"
+                      alt="Sukishi Intergroup Co., Ltd." width="160" height="auto"
+                      style="display:block; max-width:160px; max-height:56px; object-fit:contain;" />
+                    <div style="display:none; font-size:0; max-height:0; overflow:hidden;">Sukishi Intergroup Co., Ltd.
+                    </div>
+                  </td>
+                  <td align="right" style="vertical-align:middle;">
+                    <div style="font-size:10px; letter-spacing:2.5px; text-transform:uppercase;
+                                color:#9299A8; font-family: Tahoma,Arial,sans-serif;
+                                margin-bottom:4px;">Document</div>
+                    <div style="font-size:18px; font-weight:700; color:#1C1F2E;
+                                font-family: Tahoma,Arial,sans-serif;
+                                letter-spacing:-0.3px;">Purchase Order</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- HEADER ACCENT BAR (PO Number Badge)     -->
+          <tr>
+            <td style="background:#8B1219; padding:16px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td style="vertical-align:middle;">
+                    <div style="color:rgba(255,255,255,0.65); font-size:10px; letter-spacing:2px;
+                                text-transform:uppercase; font-family: Tahoma,Arial,sans-serif;
+                                margin-bottom:3px;">Sukishi Intergroup Co., Ltd.</div>
+                    <div style="color:#ffffff; font-size:13px; font-family: Tahoma,Arial,sans-serif;">
+                      ใบสั่งซื้อสินค้า / Purchase Order
+                    </div>
+                  </td>
+                  <td align="right" style="vertical-align:middle;">
+                    <div style="display:inline-block; background:#F5D84A; color:#5C0A0F;
+                                font-size:12px; font-weight:700; padding:7px 18px;
+                                letter-spacing:0.5px; font-family: Tahoma,Arial,sans-serif;">
+                      {{po.poNumber}}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="padding:36px 40px 28px;">
+
+              <!-- Salutation -->
+              <p style="margin:0 0 6px; font-size:15px; color:#1C1F2E; line-height:1.6;">
+                เรียน <strong style="color:#1C1F2E;">
+                  {{#if supplier.contactPerson}}
+                  {{supplier.contactPerson}}
+                  {{else if supplier.companyName}}
+                  {{supplier.companyName}}
+                  {{else}}ผู้ที่เกี่ยวข้อง{{/if}}</strong>
+              <p style="margin:0 0 28px; font-size:14px; color:#4A5568;
+                        line-height:1.85; font-family: Tahoma,Arial,sans-serif;">
+                บริษัท ซูกิชิ อินเตอร์กรุ๊ป จำกัด ขอส่ง
+                <strong>ใบสั่งซื้อ (Purchase Order)</strong>
+                เลขที่
+                <strong style="color:#8B1219;">{{po.poNumber}}</strong>
+                เพื่อ...
+              </p>
+
+              <!-- PO Detail Table -->
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+                style="border:1px solid #DDE1EA; margin-bottom:28px;">
+
+                <!-- Table Header -->
+                <tr>
+                  <td colspan="2" style="background:#F7F8FA; border-bottom:2px solid #8B1219;
+                           padding:10px 20px;">
+                    <span style="font-size:11px; font-weight:700; color:#8B1219;
+                                 letter-spacing:1.5px; text-transform:uppercase;
+                                 font-family: Tahoma,Arial,sans-serif;">
+                      รายละเอียด Purchase Order
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- Row: PO Number -->
+                <tr style="border-bottom:1px solid #EAEDF3;">
+                  <td style="padding:13px 20px; font-size:12px; color:#7A8499;
+                             width:42%; font-family: Tahoma,Arial,sans-serif;
+                             letter-spacing:0.2px; text-transform:uppercase; border-right:1px solid #EAEDF3;">
+                    PO Number
+                  </td>
+                  <td style="padding:13px 20px; font-size:13px; color:#1C1F2E; font-weight:600;
+                             font-family: Tahoma,Arial,sans-serif;">
+                    {{po.poNumber}}
+                  </td>
+                </tr>
+
+                <!-- Row: PO Date -->
+                <tr style="border-bottom:1px solid #EAEDF3;">
+                  <td style="padding:13px 20px; font-size:12px; color:#7A8499;
+                             font-family: Tahoma,Arial,sans-serif;
+                             letter-spacing:0.2px; text-transform:uppercase; border-right:1px solid #EAEDF3;">
+                    PO Date
+                  </td>
+                  <td style="padding:13px 20px; font-size:13px; color:#1C1F2E; font-weight:600;
+                             font-family: Tahoma,Arial,sans-serif;">
+                    {{po.poDate}}
+                  </td>
+                </tr>
+
+                <!-- Row: Vendor -->
+                <tr style="border-bottom:1px solid #EAEDF3;">
+                  <td style="padding:13px 20px; font-size:12px; color:#7A8499;
+                             font-family: Tahoma,Arial,sans-serif;
+                             letter-spacing:0.2px; text-transform:uppercase; border-right:1px solid #EAEDF3;">
+                    Vendor
+                  </td>
+                  <td style="padding:13px 20px; font-size:13px; color:#1C1F2E; font-weight:600;
+                             font-family: Tahoma,Arial,sans-serif;">
+                    {{supplier.companyName}}
+                  </td>
+                </tr>
+
+                <!-- Row: Payment Term -->
+                <tr style="border-bottom:1px solid #EAEDF3;">
+                  <td style="padding:13px 20px; font-size:12px; color:#7A8499;
+                             font-family: Tahoma,Arial,sans-serif;
+                             letter-spacing:0.2px; text-transform:uppercase; border-right:1px solid #EAEDF3;">
+                    Payment Term
+                  </td>
+                  <td style="padding:13px 20px; font-size:13px; color:#1C1F2E; font-weight:600;
+                             font-family: Tahoma,Arial,sans-serif;">
+                    {{po.paymentTerm}}
+                  </td>
+                </tr>
+
+                <!-- Row: Total (highlighted) -->
+                <tr style="background:#FEF9EC;">
+                  <td style="padding:14px 20px; font-size:12px; color:#7A8499;
+                             font-family: Tahoma,Arial,sans-serif;
+                             letter-spacing:0.2px; text-transform:uppercase; border-right:1px solid #EAEDF3;">
+                    มูลค่ารวม (THB)
+                  </td>
+                  <td style="padding:14px 20px; font-size:15px; color:#8B1219; font-weight:700;
+                             font-family: Tahoma,Arial,sans-serif; letter-spacing:-0.2px;">
+                    {{summary.totalTHB}}
+                  </td>
+                </tr>
+
+              </table>
+
+              <!-- Attachment Notice -->
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+                style="border:1px solid #D8DBE6; background:#F7F8FA; margin-bottom:32px;">
+                <tr>
+                  <td style="padding:14px 20px;">
+                    <table cellpadding="0" cellspacing="0" role="presentation">
+                      <tr>
+                        <td style="padding-right:14px; vertical-align:middle;">
+                          <!-- Icon block -->
+                          <div style="width:36px; height:36px; background:#8B1219;
+                                      text-align:center; line-height:36px; font-size:17px;">
+                            📎
+                          </div>
+                        </td>
+                        <td style="vertical-align:middle;">
+                          <div style="font-size:11px; font-weight:700; color:#8B1219;
+                                      letter-spacing:1px; text-transform:uppercase;
+                                      font-family: Tahoma,Arial,sans-serif;
+                                      margin-bottom:2px;">เอกสารแนบ / Attachment</div>
+                          <div style="font-size:13px; color:#4A5568;
+                                      font-family: Tahoma,Arial,sans-serif;">
+                            {{pdfName}}
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Closing paragraphs -->
+              <p style="margin:0 0 8px; font-size:14px; color:#4A5568; line-height:1.8;
+                        font-family: Tahoma,Arial,sans-serif;">
+                หากท่านมีข้อสงสัยหรือต้องการข้อมูลเพิ่มเติมเกี่ยวกับใบสั่งซื้อฉบับนี้
+                กรุณาติดต่อฝ่ายจัดซื้อโดยตรงผ่านช่องทางด้านล่าง
+              </p>
+              <p style="margin:0 0 28px; font-size:14px; color:#4A5568; line-height:1.8;
+          font-family: Tahoma,Arial,sans-serif;">
+                ขอแสดงความนับถือ
+              </p>
+
+              <!-- SIGNATURE BLOCK -->
+          <tr>
+            <td style="padding:0 40px 36px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+                style="border-top:2px solid #8B1219;">
+                <tr>
+                  <td style="padding-top:18px;">
+                    <div style="font-size:14px; font-weight:700; color:#1C1F2E;
+                      font-family: Tahoma,Arial,sans-serif;">
+                      {{senderName}}
+                    </div>
+                    <div style="font-size:12px; color:#7A8499; margin-top:3px;
+                      font-family: Tahoma,Arial,sans-serif;">
+                      บริษัท ซูกิชิ อินเตอร์กรุ๊ป จำกัด &nbsp;|&nbsp; Sukishi Intergroup Co., Ltd.
+                    </div>
+                    <div style="font-size:12px; color:#8B1219; margin-top:3px;
+                      font-family: Tahoma,Arial,sans-serif;">
+                      {{senderEmail}}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#1C1F2E; padding:18px 40px; text-align:center;">
+              <p style="margin:0 0 4px; font-size:10px; color:rgba(255,255,255,0.4);
+                        line-height:1.7; font-family: Tahoma,Arial,sans-serif;
+                        letter-spacing:0.3px;">
+                อีเมลนี้ถูกส่งโดยอัตโนมัติจากระบบ PMS &nbsp;·&nbsp; Sukishi
+                Intergroup Co., Ltd.
+              </p>
+              <p style="margin:0; font-size:10px; color:rgba(255,255,255,0.3);
+                        font-family: Tahoma,Arial,sans-serif; letter-spacing:0.3px;">
+                หมายเหตุ 1 &nbsp;·&nbsp; Note 1.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /OUTER WRAPPER -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>

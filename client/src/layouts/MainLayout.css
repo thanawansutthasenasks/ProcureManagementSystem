@@ -1,0 +1,12 @@
+.sidebar-bg {
+  background-color: #800020; /* สีเลือดหมู */
+  color: white;
+}
+
+.sidebar-bg .nav-link:hover {
+  background-color: #a00028;
+}
+
+.sidebar-bg .nav-link.active {
+  background-color: #b00030 !important;
+}
